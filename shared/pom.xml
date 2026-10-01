@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.cgeek</groupId>
+    <artifactId>cgeek-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>shared</artifactId>
+  <name>shared</name>
+  <description>
+    Kafka wire contracts shared by submission, knowledge, ranking and judge.
+
+    Deliberately plain Java: no Spring, no database, no business logic, no framework
+    annotations. If something here needs a Spring or persistence dependency, it does not
+    belong in this module. Keeping it to message shapes is what makes the coupling safe.
+
+    No spring-boot-maven-plugin here - this is a plain library jar, not an application.
+  </description>
+</project>

@@ -1,0 +1,32 @@
+# Java / Maven
+target/
+*.jar
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Local
+.env
+.env.local
+*.log
+
+# Secrets: only SealedSecrets (already encrypted) belong in Git.
+deploy/**/secret.yaml
+deploy/**/*-secret.yaml
+!deploy/**/sealedsecret*.yaml
+
+# OS
+.DS_Store

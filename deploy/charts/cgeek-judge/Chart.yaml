@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cgeek-judge
+description: The sandboxed judge worker. Separate from the services because its manifests are genuinely different.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

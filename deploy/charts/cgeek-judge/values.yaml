@@ -1,0 +1,58 @@
+# The judge runs untrusted C. Every value below is a containment control, not a tuning
+# knob - change them only with the abuse tests (fork bomb, infinite loop, huge output,
+# rm attempt) passing afterwards.
+
+image:
+  registry: ghcr.io
+  repository: OWNER/cgeek-judge   # TODO: set to your GitHub owner
+  tag: ""                         # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+# Kernel-level isolation. Without this the sandbox is just a container.
+runtimeClassName: gvisor
+
+kafka:
+  bootstrap: cgeek-kafka-bootstrap.kafka.svc:9092
+  groups:
+    submissions: judge
+    snippets: judge_snippet
+
+# Pod-level limits, from the proposal. Per-run limits (2s CPU, 256 MB, 64 procs, 1 MB
+# output) are enforced inside the pod by prlimit/seccomp and live in the app config,
+# because they are per problem and must be changeable without a redeploy.
+resources:
+  requests:
+    cpu: 500m
+    memory: 768Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+security:
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  dropAllCapabilities: true
+
+# Submitted code is compiled and run here. tmpfs, so nothing survives the run and
+# nothing touches the node's disk.
+workspace:
+  mountPath: /work
+  sizeLimit: 512Mi
+
+networkPolicy:
+  enabled: true
+  # Deny all egress except these. If judged code can reach the internet, it can
+  # exfiltrate test cases or use your VM as a proxy.
+  allowEgressTo:
+    - kafka
+    - problem-service
+    - kube-dns
+
+# KEDA scales on consumer lag rather than CPU: judging is bursty and a queued
+# submission is the thing users actually wait on.
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4        # 2 GB of the 12 GB budget assumes ~2 concurrent
+  lagThreshold: 5

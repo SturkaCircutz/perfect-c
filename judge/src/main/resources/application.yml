@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: judge
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      # Two groups on two topics so snippet runs cannot starve real submissions.
+      group-id: ${KAFKA_GROUP:judge}
+      auto-offset-reset: earliest
+      # Offsets are committed by hand, only after the verdict is published.
+      enable-auto-commit: false
+
+server:
+  port: ${PORT:8090}
+
+judge:
+  # Workspace lives on a tmpfs mount; the container root is read only.
+  workdir: ${JUDGE_WORKDIR:/work}
+
+  compile:
+    # TODO (proposal open question): C11 only, or C11 + C17 + C23?
+    # Listed as C11 and C17 because the judge job spec names those two.
+    standards: [ c11, c17 ]
+    timeout-seconds: 10
+    sanitizer-flags: "-O2 -Wall -fsanitize=address,undefined"
+    # Ranking timings come from a second run without sanitizers, which are far slower.
+    timing-flags: "-O2 -Wall"
+
+  limits:
+    # Defaults; a problem may tighten or loosen these.
+    cpu-seconds: 2
+    memory-mb: 256
+    processes: 64
+    output-kb: 1024
+    wall-clock-seconds: 10
+
+  retry:
+    # After 3 failed attempts the job goes to submissions.DLQ and alerts an admin.
+    max-attempts: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# Topic names, shared by every Kafka client. Partition counts and keys are declared in
+# deploy/infra/kafka, not here.
+cgeek:
+  topics:
+    submissions: submissions
+    snippet-runs: snippet_runs
+    results: results
+    submissions-dlq: submissions.DLQ

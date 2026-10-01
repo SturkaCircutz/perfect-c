@@ -1,0 +1,52 @@
+name: images
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+# The Oracle VM is Arm64. Building amd64 images here would produce something that cannot
+# run in the cluster at all, so every image is linux/arm64.
+env:
+  REGISTRY: ghcr.io
+  PLATFORMS: linux/arm64
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - { name: gateway,    context: gateway }
+          - { name: auth,       context: services/auth }
+          - { name: problem,    context: services/problem }
+          - { name: submission, context: services/submission }
+          - { name: knowledge,  context: services/knowledge }
+          - { name: ranking,    context: services/ranking }
+          - { name: judge,      context: judge }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Context is the repo root, not the module: the Dockerfiles need the parent pom
+      # and the shared module to build.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.context }}/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

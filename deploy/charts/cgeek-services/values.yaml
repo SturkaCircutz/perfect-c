@@ -1,0 +1,59 @@
+# Every app here is a Deployment + Service. templates/deployment.yaml loops over this
+# list, so adding a service means adding an entry, not a new file.
+#
+# The judge is NOT here - its manifests need gVisor, a NetworkPolicy and KEDA, which
+# nothing else needs. See deploy/charts/cgeek-judge.
+
+global:
+  image:
+    registry: ghcr.io
+    # TODO: set to your GitHub owner once the repo is pushed.
+    repository: OWNER/cgeek
+    tag: ""          # defaults to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+
+  # Non-secret shared config. Secrets come from SealedSecrets, never from values.
+  kafka:
+    bootstrap: cgeek-kafka-bootstrap.kafka.svc:9092
+  redis:
+    url: redis://cgeek-redis.default.svc:6379
+
+# Memory budget from the proposal: 3 GB total for 6 JVM processes on a 12 GB VM.
+# 512Mi limit each is 3 GB exactly, with no headroom - revisit once real usage is known.
+defaults:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 384Mi
+    limits:
+      memory: 512Mi
+
+apps:
+  - name: gateway
+    port: 8080
+    ingress: true          # the only app reachable from outside
+  - name: auth
+    port: 8081
+    redis: true
+  - name: problem
+    port: 8082
+  - name: submission
+    port: 8083
+    kafka: true
+  - name: knowledge
+    port: 8084
+    kafka: true
+  - name: ranking
+    port: 8085
+    kafka: true
+    redis: true
+
+ingress:
+  enabled: true
+  className: traefik       # built into k3s
+  host: cgeek.example.com  # TODO: real domain
+  tls:
+    enabled: true
+    # cert-manager + Let's Encrypt
+    issuer: letsencrypt-prod

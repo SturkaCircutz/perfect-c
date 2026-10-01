@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cgeek-services
+description: Gateway and the five Spring Boot services. All the same shape, so one chart.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

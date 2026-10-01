@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: submission
+
+  # TODO: persistence - store for the submissions collection/table is undecided.
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      group-id: ${KAFKA_GROUP:submission}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+server:
+  port: ${PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# Topic names, shared by every Kafka client. Partition counts and keys are declared in
+# deploy/infra/kafka, not here.
+cgeek:
+  topics:
+    submissions: submissions
+    snippet-runs: snippet_runs
+    results: results
+    submissions-dlq: submissions.DLQ

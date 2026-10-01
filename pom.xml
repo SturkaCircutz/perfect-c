@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    CGeek root aggregator.
+
+    Spring Boot is pinned to 4.0.8 rather than the newer 4.1.1 because Spring Cloud
+    2025.1.3 (Oakwood) - the latest GA train, needed by the gateway - is built against
+    Boot 4.0.8. The train that targets Boot 4.1+ (2026.0.0 Paddington) is milestone-only.
+    Revisit both properties together once Paddington reaches GA.
+  -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.8</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.cgeek</groupId>
+  <artifactId>cgeek-parent</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>cgeek-parent</name>
+  <description>CGeek - a C practice platform with a sandboxed online judge</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <spring-cloud.version>2025.1.3</spring-cloud.version>
+  </properties>
+
+  <modules>
+    <module>shared</module>
+    <module>gateway</module>
+    <module>services/auth</module>
+    <module>services/problem</module>
+    <module>services/submission</module>
+    <module>services/knowledge</module>
+    <module>services/ranking</module>
+    <module>judge</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.cgeek</groupId>
+        <artifactId>shared</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- Applied to every module. Persistence starters are deliberately absent:
+       the Postgres/Mongo split per service is still undecided. -->
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
